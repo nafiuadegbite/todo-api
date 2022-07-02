@@ -1,5 +1,7 @@
 const todoModel = require("../models/todoModel");
 
+let todoId = 0;
+
 const httpGetAllTodo = (req, res) => {
   todoModel.find({}, (err, toDos) => {
     if (err) {
@@ -12,8 +14,10 @@ const httpGetAllTodo = (req, res) => {
 
 const httpAddTodo = (req, res) => {
   const { title, description } = req.body;
+  todoId++;
 
   const todoAdd = new todoModel({
+    _id: todoId,
     title: title,
     description: description,
   });
@@ -32,7 +36,23 @@ const httpAddTodo = (req, res) => {
   });
 };
 
+const httpDeleteAllTodo = (req, res) => {
+  todoModel.remove({}, (err, toDo) => {
+    if (err) {
+      res.status(500).json({
+        err,
+      });
+    } else {
+      res.status(200).json({
+        message: "All To-Do has been removed",
+        toDo,
+      });
+    }
+  });
+};
+
 module.exports = {
   httpGetAllTodo,
   httpAddTodo,
+  httpDeleteAllTodo,
 };
