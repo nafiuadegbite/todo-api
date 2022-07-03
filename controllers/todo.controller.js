@@ -1,7 +1,5 @@
 const todoModel = require("../models/todoModel");
 
-let todoId = 0;
-
 const httpGetAllTodo = (req, res) => {
   todoModel.find({}, (err, toDos) => {
     if (err) {
@@ -12,17 +10,44 @@ const httpGetAllTodo = (req, res) => {
   });
 };
 
+const httpGetTodo = (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(404).json({
+      error: "Please enter an id",
+    });
+  }
+
+  todoModel.findById(id, (err, toDo) => {
+    if (err) {
+      res.status(404).json({
+        error: "Todo details not found",
+      });
+    } else {
+      res.status(200).json({
+        message: "To-Do",
+        toDo,
+      });
+    }
+  });
+};
+
 const httpAddTodo = (req, res) => {
   const { title, description } = req.body;
-  todoId++;
+
+  if (!title || !description) {
+    return res.status(400).json({
+      error: "Missing required todo property",
+    });
+  }
 
   const todoAdd = new todoModel({
-    _id: todoId,
     title: title,
     description: description,
   });
 
-  todoAdd.save((err, todo) => {
+  todoAdd.save((err, toDo) => {
     if (err) {
       res.status(500).json({
         err,
@@ -30,14 +55,68 @@ const httpAddTodo = (req, res) => {
     } else {
       res.status(200).json({
         message: "To-Do has been created",
-        todo,
+        toDo,
+      });
+    }
+  });
+};
+
+const httpUpdateTodo = (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({
+      error: "Please enter an id",
+    });
+  }
+
+  const { title, description } = req.body;
+
+  if (!title || !description) {
+    return res.status(400).json({
+      error: "Missing required todo property",
+    });
+  }
+
+  todoModel.findByIdAndUpdate(
+    id,
+    {
+      title: title,
+      description: description,
+    },
+    (err, toDo) => {
+      if (err) {
+        res.status(404).json({
+          error: "Todo details not found",
+        });
+      } else {
+        res.status(200).json({
+          message: "To-Do updated",
+          toDo,
+        });
+      }
+    }
+  );
+};
+
+const httpDeleteTodo = (req, res) => {
+  const { id } = req.params;
+  todoModel.findByIdAndDelete(id, (err, toDo) => {
+    if (err) {
+      res.status(500).json({
+        err,
+      });
+    } else {
+      res.status(200).json({
+        message: "To-Do has been removed",
+        toDo,
       });
     }
   });
 };
 
 const httpDeleteAllTodo = (req, res) => {
-  todoModel.remove({}, (err, toDo) => {
+  todoModel.deleteMany({}, (err, toDo) => {
     if (err) {
       res.status(500).json({
         err,
@@ -53,6 +132,9 @@ const httpDeleteAllTodo = (req, res) => {
 
 module.exports = {
   httpGetAllTodo,
+  httpGetTodo,
   httpAddTodo,
+  httpUpdateTodo,
+  httpDeleteTodo,
   httpDeleteAllTodo,
 };
